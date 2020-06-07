@@ -6,13 +6,13 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="selenium_pinterest", # Replace with your own username
     version="0.0.1",
-    author="Example Author",
-    author_email="zsoltpentek@yahoo.com",
+    author="Pentek Zsolt",
     description="Selenium Pinterest helps you follow / unfollow / pin / post to Pinterest",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Zselter07/selenium-pinterest",
     packages=setuptools.find_packages(),
+    install_requires=["selenium-firefox"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

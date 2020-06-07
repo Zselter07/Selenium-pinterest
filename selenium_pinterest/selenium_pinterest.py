@@ -2,9 +2,8 @@ from typing import List, Dict, Optional
 import time, json
 
 from selenium_firefox.firefox import Firefox, By, Keys
-from ktimeout import timeout
 
-from url_creator import UrlCreator
+from .url_creator import UrlCreator
 
 PT_URL = "https://www.pinterest.com/"
 
