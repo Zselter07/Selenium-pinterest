@@ -11,7 +11,7 @@ pip3 install --upgrade selenium-pinterest
 ## Usage
 ~~~~python
 
-from selenium_pinterest.selenium_pinterest import Pinterest
+from selenium_pinterest import Pinterest
 
 pinterest_demo = pinterst_one = Pinterest("/path/to/cookies", "path/to/extension", host = 'host_nr', port=12345)
 pinterest_demo.repin('pin_id')
