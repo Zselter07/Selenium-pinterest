@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="selenium_pinterest", # Replace with your own username
-    version="0.0.2",
+    version="0.0.4",
     author="Pentek Zsolt",
     description="Selenium Pinterest helps you follow / unfollow / pin / post to Pinterest",
     long_description=long_description,

@@ -3,7 +3,7 @@ import time, json
 
 from selenium_firefox.firefox import Firefox, By, Keys
 
-from .url_creator import UrlCreator
+from url_creator import UrlCreator
 
 PT_URL = "https://www.pinterest.com/"
 
@@ -26,6 +26,7 @@ class Pinterest:
                 self.browser.load_cookies()
                 time.sleep(1.5)
                 self.browser.refresh()
+                time.sleep(0.5)
             else:
                 input('Log in then press enter')
                 self.browser.get(PT_URL)
@@ -39,18 +40,21 @@ class Pinterest:
 
     def follow(self, user_name: str):
         self.browser.get(self.url_creator.user_url(user_name))
-        user = self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ erh tg7 mWe')]")
         time.sleep(0.5)
-        if user != None and user.text == "Follow":
-            user.click()
+
+        follow_container = self.browser.find(By.XPATH, "//div[contains(@class, 'Jea gRy jx- zI7 iyn Hsu')]")
+        follow_button = self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ erh tg7 mWe')]", follow_container)
+        print(follow_button.text)
+        if follow_button != None and follow_button.text == "Follow":
+            follow_button.click()
             time.sleep(0.5)
         else:
             return False
             
-        user = self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ erh tg7 mWe')]") or self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ pBj tg7 mWe')]")
+        follow_button = self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ erh tg7 mWe')]", timeout=3) or self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ pBj tg7 mWe')]", timeout=3)
         
-        if user.text != None:
-            return user.text == "Following"
+        if follow_button.text != None:
+            return follow_button.text == "Following"
 
     def unfollow(self, user_name: str):
         self.browser.get(self.url_creator.user_url(user_name))
@@ -122,16 +126,18 @@ class Pinterest:
             self.browser.get(self.url_creator.board_url(user_name, board_name))
 
         time.sleep(1)
-        followers_container = self.browser.find(By.XPATH, "/html/body/div[1]/div[1]/div[3]/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div/div[1]/div/div[2]/div[2]/div[2]/div/button", timeout=1) or self.browser.find(By.XPATH, "/html/body/div[1]/div[1]/div[3]/div/div/div/div[1]/div/div[1]/div/div[4]/div[1]/div/button/div/span", timeout=1)
+        followers_container = self.browser.find_all(By.XPATH, "//span[contains(@class, 'tBJ dyH iFc yTZ pBj DrD IZT mWe')]")
 
-        if followers_container != None:
-            followers_container.click()
+        for elem in followers_container:
+            if elem != None and 'followers' in elem.text:
+                elem.click()
+                time.sleep(1)
 
         saved_users = 0
         final_users = []
 
         while number_of_users_to_follow >= saved_users:
-            users_list = self.browser.find_all(By.XPATH, "//div[contains(@class, 'Module User hasText thumb medium boardFollower')]")
+            users_list = self.browser.find_all(By.XPATH, "//div[contains(@class, 'Module User hasText thumb medium')]")
             users_length_before = len(final_users)
 
             for user_container in users_list:
@@ -158,39 +164,41 @@ class Pinterest:
             see_more_button.click()
             time.sleep(0.5)
 
-    def search_pinterest_boards(self, search_term: str, number_of_boards_to_get: int):
+    def search_pinterest_boards(self, search_term: str, number_of_boards_to_get: int=35):
         self.browser.get(self.url_creator.search_board_url(search_term))
         time.sleep(1)
 
-        if not self.browser.find(By.XPATH, "//div[contains(@class, 'noResults')]"):
-            board_names_container = self.browser.find_all(By.XPATH, "//div[contains(@class, 'Yl- MIw Hb7')]")
-            number_of_saved_boards = 0
-            board_urls = []
+        if self.browser.find(By.XPATH, "//div[contains(@class, 'noResults')]"):
+            return
 
-            while True:
-                before_scroll = self.browser.current_page_offset_y()
+        board_names_container = self.browser.find_all(By.XPATH, "//div[contains(@class, 'Yl- MIw Hb7')]")
+        number_of_saved_boards = 0
+        board_urls = []
 
-                for board_name_element in board_names_container:
-                    full_board_url = self.browser.find(By.CSS_SELECTOR, 'a', board_name_element).get_attribute('href')
-                    board_info = full_board_url.split('.com/')[1]
-                    user_name = board_info.split('/')[0]
-                    board_name = board_info.split('/')[1]
+        while True:
+            before_scroll = self.browser.current_page_offset_y()
 
-                    if (user_name, board_name) in board_urls:
-                        continue
+            for board_name_element in board_names_container:
+                full_board_url = self.browser.find(By.CSS_SELECTOR, 'a', board_name_element).get_attribute('href')
+                board_info = full_board_url.split('.com/')[1]
+                user_name = board_info.split('/')[0]
+                board_name = board_info.split('/')[1]
 
-                    board_urls.append((user_name, board_name))
-                    number_of_saved_boards += 1
+                if (user_name, board_name) in board_urls:
+                    continue
 
-                    if number_of_boards_to_get == number_of_saved_boards:
-                        return board_urls
-                    
-                self.browser.scroll(500)
-                time.sleep(0.5)
-                after_scroll = self.browser.current_page_offset_y()
+                board_urls.append((user_name, board_name))
+                number_of_saved_boards += 1
 
-                if after_scroll == before_scroll:
+                if number_of_boards_to_get == number_of_saved_boards:
                     return board_urls
+                
+            self.browser.scroll(1000)
+            time.sleep(0.5)
+            after_scroll = self.browser.current_page_offset_y()
+
+            if after_scroll == before_scroll:
+                return board_urls
     
     def get_pins_from_home_feed(self):
         self.browser.get(self.url_creator.home_feed_url())
@@ -203,9 +211,10 @@ class Pinterest:
 
             if 'pinterest.com' not in full_url:
                 continue
-
-            pin_id = full_url.split('pin/')[1]
-            home_pins.append(pin_id)
+            
+            if 'pin/' in full_url:
+                pin_id = full_url.split('pin/')[1]
+                home_pins.append(pin_id)
         
         return home_pins
 
