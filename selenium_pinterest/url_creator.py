@@ -24,7 +24,7 @@ class UrlCreator:
     @staticmethod
     def home_feed_url():
         return BASE_URL + 'homefeed'
-    
+        
     @staticmethod
     def pin_builder_url():
         return BASE_URL + 'pin-builder'
