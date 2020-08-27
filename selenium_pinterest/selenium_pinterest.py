@@ -159,6 +159,7 @@ class Pinterest:
             full_link = self.browser.find(By.CSS_SELECTOR, 'a', saved_to_button).get_attribute('href')
 
             self.browser.get(full_link)
+            print(full_link)
             rand.sleep(2.5, 3)
 
             latest_image_box = self.browser.find(By.XPATH, "//div[contains(@class, 'Yl- MIw Hb7')]", timeout=5)
@@ -203,12 +204,11 @@ class Pinterest:
                 self.browser.get(UrlCreator.board_url(user_name, board_name))
 
             rand.sleep(1, 1.5)
-            followers_container = self.browser.find_all(By.XPATH, "//span[contains(@class, 'tBJ dyH iFc yTZ pBj DrD IZT mWe')]")
+            followers_container = self.browser.find(By.XPATH, "//div[contains(@class, 'rLK iyn eEj FTD L4E DI9 BG7')]")
 
-            for elem in followers_container:
-                if elem is not None and 'followers' in elem.text:
-                    elem.click()
-                    rand.sleep(1, 1.5)
+            if followers_container is not None:
+                followers_container.click()
+                rand.sleep(1, 1.5)
 
             saved_users = 0
             final_users = []
@@ -220,6 +220,8 @@ class Pinterest:
 
                     for user_container in users_list:
                         try:
+                            print(user_container.text)
+                            print('im in the for')
                             user_url = self.browser.find(By.CSS_SELECTOR, 'a', user_container).get_attribute('href')
                             user_name = user_url.split('.com/')[1].split('/')[0]
 
