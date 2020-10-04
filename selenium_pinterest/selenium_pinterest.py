@@ -324,83 +324,111 @@ class Pinterest:
             traceback.print_exc()
 
             return None
-
+    
     def post_pin(
         self, 
-        file_path: str,
-        title_text: str,
+        image_path: str,
         board_name: str,
-        about_text: Optional[str] = None,
-        destination_link_text: Optional[str] = None
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        url: Optional[str] = None
     ) -> Optional[str]:
         try:
             self.browser.get(UrlCreator.pin_builder_url())
             rand.sleep(1, 1.5)
+
+            image_box = self.browser.find_by('div', class_='DUt XiG zI7 iyn Hsu')
+
+            if not image_box:
+                raise 'did not find image_box'
+
+            image_input = self.browser.find(By.CSS_SELECTOR, 'input', image_box)
+
+            if not image_input:
+                raise 'did not find image_input'
+
+            image_input.send_keys(image_path)
+            rand.sleep(1, 1.5)
+
             select_board_button = self.browser.find_by('button', attributes={'data-test-id': 'board-dropdown-select-button'})
             select_board_button.click()
-            rand.sleep(0.1, 0.5)
-            
-            boards = self.browser.find_all(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ pBj DrD IZT mWe z-6')]") 
+            rand.sleep(1, 1.5)
+            board_search_field = self.browser.find_by('input', id_='pickerSearchField')
+            self.browser.send_keys_delay_random(board_search_field, board_name)
+            rand.sleep(1, 1.5)
+            boards = self.browser.find_all_by('div', class_='tBJ dyH iFc yTZ pBj DrD IZT mWe z-6', timeout=2.5)
 
-            for board in boards:
-                if board.text == board_name:
-                    board.click()
-                    rand.sleep(0.1, 0.5)
+            exists_board = False
 
-                    break
-            else:
-                dropdown_boards = self.browser.find(By.XPATH, "//div[contains(@class, 'DUt qJc sLG zI7 iyn Hsu')]")
-                create_board = self.browser.find(By.XPATH, "//div[contains(@class, 'rDA wzk zI7 iyn Hsu')]", dropdown_boards)
+            if boards and len(boards) > 0:
+                for board in boards:
+                    if board.text == board_name:
+                        exists_board = True
+                        board.click()
+                        rand.sleep(0.1, 0.5)
+
+                        break
+
+            if not exists_board:
+                dropdown_boards = self.browser.find_by('div', class_='DUt qJc sLG zI7 iyn Hsu')
+                create_board = self.browser.find_by('div', class_='rDA wzk zI7 iyn Hsu', in_element=dropdown_boards)
 
                 if create_board is not None:
                     create_board.click()
                     rand.sleep(0.1, 0.5)
-                
-                text_tag = self.browser.find(By.XPATH, "//input[contains(@id, 'boardEditName')]")
-                text_tag.send_keys(board_name)
+
+                board_name_textfield = self.browser.find_by('input', id_='boardEditName', timeout=2)
+
+                if board_name_textfield.get_attribute('value') != board_name:
+                    while len(board_name_textfield.get_attribute('value')) > 0:
+                        board_name_textfield.send_keys(Keys.BACK_SPACE)
+                        board_name_textfield = self.browser.find_by('input', id_='boardEditName', timeout=2)
+
+                    self.browser.send_keys_delay_random(board_name_textfield, board_name)
+                    rand.sleep(0.5, 1)
+
+                create_board_button = self.browser.find_by('button', class_='RCK Hsu USg adn CCY czT F10 xD4 fZz hUC Il7 Jrn hNT BG7 NTm KhY', timeout=2.5) or self.browser.find_by('button', {'type':'submit'}, timeout=2.5)
+                create_board_button.click()
                 rand.sleep(0.5, 1)
-                self.browser.find(By.XPATH, "//button[contains(@class, 'RCK Hsu USg F10 xD4 fZz hUC GmH adn Il7 Jrn hNT iyn BG7 NTm KhY')]").click()
-                rand.sleep(0.5, 1)
-                just_created_board_save_bttn = self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ erh DrD IZT mWe')]")
-                just_created_board_save_bttn.click()
+                just_created_board_save_button = self.browser.find_by('div', class_='tBJ dyH iFc yTZ erh DrD IZT mWe')
+                just_created_board_save_button.click()
+                rand.sleep(0.5, 1.5)
 
-            title_box = self.browser.find(By.XPATH, "//div[contains(@class, 'CDp xcv L4E zI7 iyn Hsu')]")
+            if title:
+                title_box = self.browser.find_by('div', class_='CDp xcv L4E zI7 iyn Hsu')
 
-            if title_box is not None:
-                title = self.browser.find(By.CSS_SELECTOR, "textarea", title_box)
-                title.send_keys(title_text)
-                rand.sleep(0.2, 0.5)
+                if title_box:
+                    title_textfield = self.browser.find(By.CSS_SELECTOR, "textarea", title_box)
+
+                    if title_textfield:
+                        self.browser.send_keys_delay_random(title_textfield, title)
+                        rand.sleep(0.5, 1.5)
+
+            if description:
+                about_box = self.browser.find_by('div', class_='Jea Tte ujU xcv L4E zI7 iyn Hsu', timeout=2)
+
+                if about_box:
+                    about_textfield = self.browser.find_by('div', class_='notranslate public-DraftEditor-content', in_element=about_box, timeout=2)
+
+                    if about_textfield:
+                        self.browser.send_keys_delay_random(about_textfield, description)
+                        rand.sleep(0.5, 1.5)
+
+            if url:
+                url_box = self.browser.find_by('div', {'data-test-id':'pin-draft-link'})
+
+                if url_box:
+                    url_textfield = self.browser.find(By.CSS_SELECTOR, "textarea", url_box)
+
+                    if url_textfield:
+                        self.browser.send_keys_delay_random(url_textfield, url)
+                        rand.sleep(0.5, 1.5)
             
-            if about_text is not None:
-                about_box = self.browser.find(By.XPATH, "//div[contains(@class, 'Jea Tte ujU xcv L4E zI7 iyn Hsu')]")
+            save_button = self.browser.find_by('button', {'data-test-id':'board-dropdown-save-button'})
+            save_button.click()
 
-                if about_box is not None:
-                    about = self.browser.find(By.CSS_SELECTOR, "textarea", about_box)
-                    about.send_keys(about_text)
-                    rand.sleep(0.2, 0.5)
-
-            if destination_link_text is not None:
-                destination_link_box = self.browser.find(By.XPATH, "//div[contains(@data-test-id, 'pin-draft-link')]")
-
-                if destination_link_box is not None:
-                    destination_link = self.browser.find(By.CSS_SELECTOR, "textarea", destination_link_box)
-                    destination_link.send_keys(destination_link_text)
-                    rand.sleep(0.2, 0.5)
-            
-            image_box = self.browser.find(By.XPATH, "//div[contains(@class, 'DUt XiG zI7 iyn Hsu')]")
-
-            if image_box is not None:
-                image = self.browser.find(By.CSS_SELECTOR, 'input', image_box)
-                image.send_keys(file_path)
-                rand.sleep(1, 1.5)
-            
-            save_button = self.browser.find(By.XPATH, "//div[contains(@class, 'tBJ dyH iFc yTZ erh DrD IZT mWe')]")
-
-            if save_button is not None:
-                save_button.click()
-            
             rand.sleep(0.1, 0.5)
-            see_it_now = self.browser.find(By.XPATH, "//div[contains(@data-test-id, 'seeItNow')]")
+            see_it_now = self.browser.find_by('div', {'data-test-id':'seeItNow'})
             full_pin_url = self.browser.find(By.CSS_SELECTOR, 'a', see_it_now).get_attribute('href')
 
             return full_pin_url.split('pin/')[1]
