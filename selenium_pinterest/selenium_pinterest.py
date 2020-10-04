@@ -14,9 +14,10 @@ class Pinterest:
         cookies_folder_path: str,
         extensions_folder_path: str,
         host: Optional[str] = None,
-        port: Optional[int] = None
+        port: Optional[int] = None,
+        headless: bool = False
     ):
-        self.browser = Firefox(cookies_folder_path, extensions_folder_path, host=host, port=port)
+        self.browser = Firefox(cookies_folder_path, extensions_folder_path, host=host, port=port, headless=headless)
 
         try:
             self.browser.get(PT_URL)
